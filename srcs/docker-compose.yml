@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    volumes:
+      - database_data:/var/lib/mysql
+    restart: always
+    networks:
+      - my_network
+    env_file:
+      - /home/kali/Desktop/debut/srcs/.env
+    expose:
+      - "3306/tcp"
+  
+  wordpress:
+    container_name: wordpress
+    depends_on:
+      - mariadb
+    build:
+      context: ./requirements/wordpress
+    restart: always
+    networks:
+      - my_network
+    env_file:
+      - /home/kali/Desktop/debut/srcs/.env
+    volumes:
+      - wordpress_data:/var/www/html
+    expose:
+      - "9000/tcp"
+  
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    volumes:
+      - wordpress_data:/var/www/html
+    ports:
+      - "443:443"
+    networks:
+      - my_network
+    depends_on:
+      - wordpress
+    restart: always
+
+volumes:
+    wordpress_data:
+      driver: local
+      driver_opts:
+        type: none
+        o: 'bind'
+        device: /home/kali/data/wordpress
+    database_data:
+      driver: local
+      driver_opts:
+        type: none
+        o: 'bind'
+        device: /home/kali/data/mariadb      
+
+
+networks:
+    my_network:
